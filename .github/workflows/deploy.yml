@@ -1,0 +1,60 @@
+
+name: Deploy Backend AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v7
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar projeto
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp -DskipTests package
+
+      - name: Enviar arquivos para AWS
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
+          source: "target/*.jar,Dockerfile,compose.yml"
+          target: "/home/ubuntu/provafinal"
+          overwrite: true
+
+      - name: Iniciar backend na AWS
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
+          script: |
+            set -eu
+            cd /home/ubuntu/provafinal
+
+            test -f .env
+
+            docker compose config --quiet
+            docker compose up -d --build
+
+            docker compose ps
