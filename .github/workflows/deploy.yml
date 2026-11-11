@@ -1,4 +1,3 @@
-
 name: Deploy Backend AWS
 
 on:
@@ -36,7 +35,6 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
           source: "target/*.jar,Dockerfile,compose.yml"
           target: "/home/ubuntu/provafinal"
           overwrite: true
@@ -47,7 +45,6 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          fingerprint: ${{ secrets.EC2_HOST_FINGERPRINT }}
           script: |
             set -eu
             cd /home/ubuntu/provafinal
